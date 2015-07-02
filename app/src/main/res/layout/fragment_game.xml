@@ -1,0 +1,80 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" tools:context="com.wbohn.rgblamp.game.GameFragment">
+
+    <LinearLayout
+        android:orientation="vertical" android:layout_width="match_parent"
+        android:background="@color/icons"
+        android:layout_height="match_parent" >
+        <TextView
+            android:id="@+id/text_view_countdown"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:textSize="26sp" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@color/primary"
+                android:gravity="left">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/color_circle_padding"
+                    android:text="@string/label_text_score"
+                    android:textColor="@color/icons" />
+                <TextView
+                    android:id="@+id/text_view_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/color_circle_padding"
+                    android:text="0"
+                    android:textColor="@color/icons" />
+            </LinearLayout>
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@color/primary"
+                android:gravity="right">
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/color_circle_padding"
+                    android:text="@string/label_text_high"
+                    android:textColor="@color/icons" />
+                <TextView
+                    android:id="@+id/text_view_high_score"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:padding="@dimen/color_circle_padding"
+                    android:text="0"
+                    android:textColor="@color/icons" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:padding="@dimen/color_circle_save_padding"
+            android:background="@color/divider"/>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/primary_light"
+            style="@android:style/ButtonBar" >
+            <Button
+                android:id="@+id/button_new_game"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/label_button_new_game"
+                android:textColor="@color/icons" />
+
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>

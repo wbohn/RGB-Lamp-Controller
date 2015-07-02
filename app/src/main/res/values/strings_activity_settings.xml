@@ -1,0 +1,25 @@
+<resources>
+    <string name="title_activity_settings">Settings</string>
+
+    <!-- Strings related to Settings -->
+    <string name="pref_title_auto_connect">Auto connect</string>
+    <string name="pref_description_auto_connect">Connect to default device on start up</string>
+
+    <string name="pref_title_default_device">Default device</string>
+    <!-- Default device entries and entryvalues are set in PrefsFragment -->
+
+    <string name="pref_title_fade_steps">Fade style</string>
+    <string-array name="pref_fade_steps">
+        <item>Blink</item>
+        <item>Fast</item>
+        <item>Medium</item>
+        <item>Slow</item>
+    </string-array>
+    <string-array name="pref_fade_step_values">
+        <item>0</item>
+        <item>1</item>
+        <item>2</item>
+        <item>3</item>
+    </string-array>
+    <string name="pref_title_max_transition">Fade transition time</string>
+</resources>
