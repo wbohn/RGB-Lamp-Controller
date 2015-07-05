@@ -9,7 +9,10 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 
+import com.wbohn.rgblamp.App;
 import com.wbohn.rgblamp.R;
+import com.wbohn.rgblamp.bus.Message;
+import com.wbohn.rgblamp.bus.MessageBuilder;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -20,7 +23,7 @@ public class PrefsFragment extends PreferenceFragment {
     private String[] pairedDeviceAddresses;
 
     public interface PrefsFragmentInterface {
-        void fadeTypeChanged();
+        void fadeTypeChanged(String stringValue);
     }
     private PrefsFragmentInterface prefsFragmentInterface;
 
@@ -67,6 +70,11 @@ public class PrefsFragment extends PreferenceFragment {
         prefsFragmentInterface = null;
     }
 
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+    }
+
     private Preference.OnPreferenceChangeListener sBindPreferenceSummaryToValueListener = new Preference.OnPreferenceChangeListener() {
 
         @Override
@@ -86,7 +94,8 @@ public class PrefsFragment extends PreferenceFragment {
                                 ? listPreference.getEntries()[index]
                                 : null);
                 // Notify the lamp
-                prefsFragmentInterface.fadeTypeChanged();
+
+                prefsFragmentInterface.fadeTypeChanged(stringValue);
             } else {
                 // For all other preferences, set the summary to the value's
                 // simple string representation.

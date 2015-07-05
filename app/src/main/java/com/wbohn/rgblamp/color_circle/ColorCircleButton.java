@@ -18,13 +18,8 @@ import com.wbohn.rgblamp.R;
 /**
  * TODO: document your custom view class.
  */
-public class ColorCircleButton extends Button implements OnColorSelectedListener {
+public class ColorCircleButton extends Button {
     private static final String TAG = "ColorCircleButton";
-
-    public interface ColorCircleButtonInterface {
-        void lampColorChanged(int index, int color);
-    }
-    private ColorCircleButtonInterface colorCircleButtonInterface;
 
     private int bulbIndex;
     private int color;
@@ -43,12 +38,6 @@ public class ColorCircleButton extends Button implements OnColorSelectedListener
 
     public ColorCircleButton(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
-    }
-
-    @Override
-    public void onColorSelected(int selectedColor) {
-        /* do nothing because selectedColor will be passed
-        when dialog dismisses */
     }
 
     @Override
@@ -81,10 +70,6 @@ public class ColorCircleButton extends Button implements OnColorSelectedListener
         }
 
         return super.onTouchEvent(event);
-    }
-
-    public void setColorCircleButtonInterface(ColorCircleButtonInterface colorCircleButtonInterface) {
-        this.colorCircleButtonInterface = colorCircleButtonInterface;
     }
 
     public void setBulbIndex(int index) {
@@ -134,36 +119,5 @@ public class ColorCircleButton extends Button implements OnColorSelectedListener
 
     public int getColor() {
         return color;
-    }
-
-    public void showColorPicker() {
-        ColorPickerDialogBuilder
-                .with(getContext()).setTitle("Choose color")
-                .initialColor(getColor())
-                .wheelType(ColorPickerView.WHEEL_TYPE.FLOWER)
-                .density(12)
-                .noSliders()
-                .setOnColorSelectedListener(this)
-                .setPositiveButton("Ok", new ColorPickerClickListener() {
-                    @Override
-                    public void onClick(DialogInterface d, int lastSelectedColor, Integer[] allColors) {
-                        if (allColors != null) {
-                            if (mode == MainActivity.MODE_FADE) {
-                                makeGradientBackground(lastSelectedColor);
-                            } else {
-                                makeSolidBackground(lastSelectedColor);
-                            }
-                            setColor(lastSelectedColor);
-                            colorCircleButtonInterface.lampColorChanged(bulbIndex, lastSelectedColor);
-                        }
-                    }
-                })
-                .setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
-                        // dialog auto-dismisses
-                    }
-                })
-                .build().show();
     }
 }

@@ -56,7 +56,7 @@ public class Game {
         return sequence;
     }
 
-    public void guessMade(int id) {
+    public void checkGuess(int id) {
         Log.i(TAG, "Guess: " + String.valueOf(id));
         if (!guessing) {
             return;

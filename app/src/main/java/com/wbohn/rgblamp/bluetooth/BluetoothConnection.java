@@ -15,6 +15,13 @@ import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
+import com.wbohn.rgblamp.App;
+import com.wbohn.rgblamp.bus.ConnectionEvent;
+import com.wbohn.rgblamp.bus.DeviceClickedEvent;
+import com.wbohn.rgblamp.bus.IncomingMessageEvent;
+import com.wbohn.rgblamp.bus.Message;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -41,12 +48,6 @@ public class BluetoothConnection extends Fragment {
     private ConnectThread connectThread;
     private ManageConnectionThread manageConnectionThread;
     private Handler handler;
-
-    public interface BluetoothConnectionInterface {
-        void connected();
-        void messageReceived(char msg);
-    }
-    private BluetoothConnectionInterface bluetoothConnectionInterface;
 
     private int state = STATE_NONE;
 
@@ -82,6 +83,7 @@ public class BluetoothConnection extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        App.getEventBus().register(this);
 
         autoConnect = getArguments().getBoolean("autoConnect");
         favoriteDeviceAddress = getArguments().getString("favoriteDeviceAddress");
@@ -108,8 +110,6 @@ public class BluetoothConnection extends Fragment {
     public void onAttach(Activity activity) {
         super.onAttach(activity);
 
-        bluetoothConnectionInterface = (BluetoothConnectionInterface) activity;
-
         handler = new Handler(activity.getMainLooper());
 
         IntentFilter filter1 = new IntentFilter(BluetoothDevice.ACTION_ACL_CONNECTED);
@@ -131,6 +131,7 @@ public class BluetoothConnection extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         stop();
+        App.getEventBus().unregister(this);
     }
 
     /* BluetoothDialog callback */
@@ -162,7 +163,8 @@ public class BluetoothConnection extends Fragment {
         getActivity().runOnUiThread(new Runnable() {
             @Override
             public void run() {
-                bluetoothConnectionInterface.connected();
+                App.getEventBus().post(new ConnectionEvent());
+                //bluetoothConnectionInterface.connected();
             }
         });
         setState(STATE_CONNECTED);
@@ -183,6 +185,19 @@ public class BluetoothConnection extends Fragment {
         if (isConnected()) {
             manageConnectionThread.write(msg.getBytes());
         }
+    }
+
+    @Subscribe
+    public void onWriteRequest(Message message) {
+        Log.i(TAG, message.text);
+        if (isConnected()) {
+            manageConnectionThread.write(message.text.getBytes());
+        }
+    }
+
+    @Subscribe
+    public void onDeviceClicked(DeviceClickedEvent event) {
+        connect(event.getDevice());
     }
 
     // thread for initiating connection to a device
@@ -288,17 +303,9 @@ public class BluetoothConnection extends Fragment {
                         handler.post(new Runnable() {
                             @Override
                             public void run() {
-                                bluetoothConnectionInterface.messageReceived(mbyte);
+                                App.getEventBus().post(new IncomingMessageEvent(mbyte));
                             }
                         });
-                        /*
-                        getActivity().runOnUiThread(new Runnable() {
-                            @Override
-                            public void run() {
-                                bluetoothConnectionInterface.messageReceived();
-                            }
-                        });*/
-                        //send the obtained bytes to the UI activity
                     }
                 } catch (IOException e) {
                     Log.e(TAG, " manageconnection run exception", e);
@@ -321,9 +328,6 @@ public class BluetoothConnection extends Fragment {
                 Log.i(TAG, "cancel");
 
                 if (socket.isConnected()) {
-                    //outputStream.close();
-                    //inputStream.close();
-                    //outputStream.flush();
                     socket.close();
                 }
             } catch (IOException e) { Log.e(TAG, "manageconnection close exception", e); }

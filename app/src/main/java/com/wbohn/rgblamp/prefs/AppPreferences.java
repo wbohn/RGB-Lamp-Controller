@@ -11,14 +11,10 @@ import com.wbohn.rgblamp.R;
  */
 public class AppPreferences {
 
-    public static final String KEY_PREF_RECENT_COLORS = "recent_colors";
-
     private SharedPreferences sharedPrefs;
     private SharedPreferences.Editor prefsEditor;
 
     int defaultColors[];
-
-    private static final String APP_SHARED_PREFS = AppPreferences.class.getSimpleName(); //  Name of the file -.xml
 
     public AppPreferences(Context context) {
         this.sharedPrefs = PreferenceManager.getDefaultSharedPreferences(context);
@@ -47,10 +43,6 @@ public class AppPreferences {
 
     public String getFadeType() {
         return sharedPrefs.getString("fade_steps", "2");
-    }
-
-    public String getFadeTransitionTime() {
-        return sharedPrefs.getString("max_transition", "100");
     }
 
     public int getHighScore() {

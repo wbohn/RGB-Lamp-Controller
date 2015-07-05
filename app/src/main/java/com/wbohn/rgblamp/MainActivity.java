@@ -1,6 +1,5 @@
 package com.wbohn.rgblamp;
 
-import android.bluetooth.BluetoothDevice;
 import android.content.Intent;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.ActionBarActivity;
@@ -12,21 +11,19 @@ import android.view.MenuItem;
 import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
+import com.squareup.otto.Subscribe;
 import com.wbohn.rgblamp.bluetooth.BluetoothConnection;
+import com.wbohn.rgblamp.bus.MessageBuilder;
+import com.wbohn.rgblamp.bus.ModeChangeEvent;
+import com.wbohn.rgblamp.color_circle.ColorCircleFragment;
 import com.wbohn.rgblamp.game.GameFragment;
 import com.wbohn.rgblamp.bluetooth.BluetoothDialog;
-import com.wbohn.rgblamp.prefs.AppPreferences;
 import com.wbohn.rgblamp.prefs.PrefsActivity;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 public class MainActivity extends ActionBarActivity implements
-        ActionBar.OnNavigationListener,
-        MainFragment.MainFragmentInterface,
-        BluetoothConnection.BluetoothConnectionInterface,
-        BluetoothDialog.BluetoothDialogInterface,
-        GameFragment.GameFragmentInterface {
+        ActionBar.OnNavigationListener {
 
     public static final String TAG = "MainActivity";
 
@@ -34,17 +31,12 @@ public class MainActivity extends ActionBarActivity implements
     public static final int MODE_FADE = 1;
     public static final int MODE_GAME = 2;
 
-    public static final char SEQUENCE_RECEIVED = '#';
-    public static final char LEVEL_SHOWN = '+';
-
     public static final int PREFS_ACTIVITY_REQUEST = 9;
 
     private GameFragment gameFragment;
-    private MainFragment mainFragment;
+    private ColorCircleFragment colorCircleFragment;
     private BluetoothConnection bluetoothConnection;
     private BluetoothDialog bluetoothDialog;
-
-    private AppPreferences appPrefs;
 
     public int mode = MODE_SOLID;
 
@@ -53,7 +45,7 @@ public class MainActivity extends ActionBarActivity implements
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        appPrefs = new AppPreferences(this);
+        App.getEventBus().register(this);
 
         ActionBar actionBar = getSupportActionBar();
         actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_LIST);
@@ -71,11 +63,11 @@ public class MainActivity extends ActionBarActivity implements
 
         FragmentManager fragmentManager = getFragmentManager();
 
-        mainFragment = (MainFragment) fragmentManager.findFragmentById(R.id.fragment_main);
+        colorCircleFragment = (ColorCircleFragment) fragmentManager.findFragmentById(R.id.fragment_main);
 
         if (savedInstanceState == null) {
-            gameFragment = GameFragment.newInstance(appPrefs.getHighScore());
-            bluetoothConnection = BluetoothConnection.newInstance(appPrefs.getAutoConnect(), appPrefs.getDefaultDeviceAddress());
+            gameFragment = new GameFragment();
+            bluetoothConnection = BluetoothConnection.newInstance(App.getAppPreferences().getAutoConnect(), App.getAppPreferences().getDefaultDeviceAddress());
 
             fragmentManager.beginTransaction()
                     .add(bluetoothConnection, "bluetooth_connection")
@@ -89,6 +81,13 @@ public class MainActivity extends ActionBarActivity implements
             actionBar.setSelectedNavigationItem(mode);
         }
     }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
@@ -96,8 +95,15 @@ public class MainActivity extends ActionBarActivity implements
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        getMenuInflater().inflate(R.menu.menu_main, menu);
+    protected void onDestroy() {
+        super.onDestroy();
+        App.getEventBus().unregister(this);
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(int position, long id) {
+        mode = position;
+        App.getEventBus().post(new ModeChangeEvent(position));
         return true;
     }
 
@@ -133,133 +139,29 @@ public class MainActivity extends ActionBarActivity implements
         }
     }
 
-    @Override
-    public boolean onNavigationItemSelected(int position, long id) {
-        mode = position;
-        onModeChange();
-        return true;
+    private void sendFadeSettings() {
+        String fadeType = App.getAppPreferences().getFadeType();
+        App.getEventBus().post(MessageBuilder.createFadeChangeMessage(fadeType));
     }
 
-    public void onModeChange() {
-        if (mode == MODE_GAME) {
+    @Subscribe
+    public void onModeChange(ModeChangeEvent event) {
+        if (event.mode == MODE_GAME) {
             showGameFragment();
-
         } else {
             hideGameFragment();
         }
-
-        sendModeChangeMessage();
-        updateAllBulbs();
-        sendFadeSettings();
-        mainFragment.setMode(mode);
     }
 
-    public void sendModeChangeMessage() {
-        if (bluetoothConnection != null && bluetoothConnection.isConnected()) {
-            String modeStr = Integer.toString(mode);
-            String msg = "@" + modeStr;
-            bluetoothConnection.write(msg);
-        }
-    }
-
-    public void hideGameFragment() {
-        if (gameFragment != null && gameFragment.isVisible()) {
-            getFragmentManager().beginTransaction().detach(gameFragment).commit();
-        }
-    }
     public void showGameFragment() {
         if (gameFragment != null && gameFragment.isDetached()) {
             getFragmentManager().beginTransaction().attach(gameFragment).commit();
         }
     }
 
-    @Override
-    public void guessMade(int id) {
-        gameFragment.guessMade(id);
-    }
-
-    @Override
-    public void onDeviceClicked(BluetoothDevice device) {
-        bluetoothConnection.connect(device);
-    }
-
-    @Override
-    public void setSequence(int[] sequence) {
-        bluetoothConnection.write(Arrays.toString(sequence));
-        Log.i(TAG, Arrays.toString(sequence));
-    }
-
-    @Override
-    public void connected() {
-        Toast.makeText(this, "Connected", Toast.LENGTH_SHORT).show();
-
-        sendModeChangeMessage();
-        updateAllBulbs();
-        sendFadeSettings();
-    }
-
-    @Override
-    public void messageReceived(char msg) {
-        Log.i(TAG, String.valueOf(msg));
-
-        switch (msg) {
-            case SEQUENCE_RECEIVED:
-                Log.i(TAG, "sequenceReceived");
-                gameFragment.startGame();
-                break;
-            case LEVEL_SHOWN:
-                Log.i(TAG, "level shown");
-                gameFragment.levelShown();
-                break;
-        }
-    }
-
-    @Override
-    public void showLevel() {
-        bluetoothConnection.write("+");
-    }
-
-    @Override
-    public void gameOver(int score) {
-        Log.i(TAG, "gameOver()");
-        bluetoothConnection.write("*");
-        int currentHighScore = appPrefs.getHighScore();
-        if (score >= currentHighScore) {
-            appPrefs.saveHighScore(score);
-        }
-    }
-
-    @Override
-    public void saveHighScore(int score) {
-        appPrefs.saveHighScore(score);
-    }
-
-    private void sendFadeSettings() {
-
-        if (bluetoothConnection != null && bluetoothConnection.isConnected()) {
-            String fadeType = appPrefs.getFadeType();
-
-            String msg = "#" + fadeType;
-
-            bluetoothConnection.write(msg);
-        }
-    }
-
-    public void updateAllBulbs() {
-        int[] colors = mainFragment.getColors();
-        for (int i = 0; i < colors.length; i++) {
-            updateBulb(i, colors[i]);
-        }
-    }
-
-    @Override
-    public void updateBulb(int index, int color) {
-        appPrefs.saveBulbColor(index, color);
-
-        if (bluetoothConnection.isConnected()) {
-            String msg = "<" + index + ":" + color + ">";
-            bluetoothConnection.write(msg);
-            Log.i(TAG, msg);
+    public void hideGameFragment() {
+        if (gameFragment != null && gameFragment.isVisible()) {
+            getFragmentManager().beginTransaction().detach(gameFragment).commit();
         }
     }
 }

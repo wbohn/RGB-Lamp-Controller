@@ -22,8 +22,10 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.Toast;
 
+import com.wbohn.rgblamp.App;
 import com.wbohn.rgblamp.bluetooth.BluetoothDeviceWrapper;
 import com.wbohn.rgblamp.R;
+import com.wbohn.rgblamp.bus.DeviceClickedEvent;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -32,8 +34,6 @@ public class BluetoothDialog extends DialogFragment {
 
     public final static String TAG = "BluetoothDialog";
 
-    public final static int REQUEST_ENABLE_BT = 5;
-
     private ArrayAdapter<BluetoothDeviceWrapper> pairedAdapter;
     private ArrayAdapter<BluetoothDeviceWrapper> otherAdapter;
 
@@ -41,11 +41,6 @@ public class BluetoothDialog extends DialogFragment {
     private ArrayList<BluetoothDevice> otherDevices = new ArrayList<BluetoothDevice>();
 
     private BluetoothAdapter bluetoothAdapter;
-
-    public interface BluetoothDialogInterface {
-        void onDeviceClicked(BluetoothDevice device);
-    }
-    private BluetoothDialogInterface bluetoothDialogInterface;
 
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
@@ -70,6 +65,7 @@ public class BluetoothDialog extends DialogFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        App.getEventBus().register(this);
         bluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
 
         if (bluetoothAdapter == null) {
@@ -112,7 +108,7 @@ public class BluetoothDialog extends DialogFragment {
                 String msg = "Connecting to " + clickedDevice.getDevice().getName();
                 Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
 
-                bluetoothDialogInterface.onDeviceClicked(clickedDevice.getDevice());
+                App.getEventBus().post(new DeviceClickedEvent(clickedDevice.getDevice()));
                 getDialog().dismiss();
             }
         };
@@ -143,8 +139,6 @@ public class BluetoothDialog extends DialogFragment {
     @Override
     public void onAttach(Activity activity) {
         super.onAttach(activity);
-
-        bluetoothDialogInterface = (BluetoothDialogInterface) activity;
 
         IntentFilter foundFilter = new IntentFilter((BluetoothDevice.ACTION_FOUND));
         activity.registerReceiver(broadcastReceiver, foundFilter);
@@ -179,7 +173,6 @@ public class BluetoothDialog extends DialogFragment {
 
         updateDeviceLists();
     }
-
 
     public void updateDeviceLists() {
         // get all known devices
