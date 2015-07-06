@@ -19,6 +19,35 @@ public class GameManager implements Game.GameInterface{
     private Game game;
     private GameStartDelayTimer gameStartDelayTimer;
 
+    public int[] getSequence() {
+        if (game != null) {
+            return game.getSequence();
+        } else {
+            return null;
+        }
+    }
+
+    public int getScore() {
+        if (game != null) {
+            return game.getScore();
+        }
+        else {
+            return 0;
+        }
+    }
+
+    public void setSequence(int[] sequence) {
+        game.setSequence(sequence);
+    }
+
+    public Game getGame() {
+        return game;
+    }
+
+    public void setGame(Game game) {
+        this.game = game;
+    }
+
     public interface GameManagerInterface {
         void updateScore(String score);
         void updateHighScore(String highScore);
@@ -33,6 +62,7 @@ public class GameManager implements Game.GameInterface{
     public void onNewGameClicked() {
         game = new Game();
         game.setGameInterface(this);
+        gameManagerInterface.updateScore("0");
         App.getEventBus().post(new Message(Arrays.toString(game.getSequence())));
     }
 
@@ -72,9 +102,18 @@ public class GameManager implements Game.GameInterface{
         int currentHighScore = App.getAppPreferences().getHighScore();
         if (score >= currentHighScore) {
             App.getAppPreferences().saveHighScore(score);
+            gameManagerInterface.updateHighScore(String.valueOf(currentHighScore));
         }
         gameManagerInterface.updateScore("0");
     }
+
+    @Override
+    public void guessMade(int score) {
+        if (score > App.getAppPreferences().getHighScore()) {
+            App.getAppPreferences().saveHighScore(score);
+            gameManagerInterface.updateHighScore(String.valueOf(score));
+        }
+        gameManagerInterface.updateScore(String.valueOf(score));    }
 
     @Override
     public void guessingDone(int score) {
@@ -82,8 +121,8 @@ public class GameManager implements Game.GameInterface{
         int currentHighScore = App.getAppPreferences().getHighScore();
 
         if (score > currentHighScore) {
-            gameManagerInterface.updateHighScore(String.valueOf(score));
             App.getAppPreferences().saveHighScore(score);
+            gameManagerInterface.updateHighScore(String.valueOf(score));
         }
         advanceGame();
     }

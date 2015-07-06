@@ -49,6 +49,6 @@ public class AppPreferences {
         return sharedPrefs.getInt("high_score", 0);
     }
     public void saveHighScore(int highScore) {
-        prefsEditor.putInt("high_score", highScore);
+        prefsEditor.putInt("high_score", highScore).commit();
     }
 }

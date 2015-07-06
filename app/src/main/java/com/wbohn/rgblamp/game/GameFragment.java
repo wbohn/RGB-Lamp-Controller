@@ -20,7 +20,6 @@ public class GameFragment extends Fragment implements GameManager.GameManagerInt
     private TextView highScoreTextView;
 
     private GameManager gameManager;
-    private int highScore;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -42,9 +41,7 @@ public class GameFragment extends Fragment implements GameManager.GameManagerInt
         scoreTextView = (TextView) rootView.findViewById(R.id.text_view_score);
         highScoreTextView = (TextView) rootView.findViewById(R.id.text_view_high_score);
 
-        highScore = App.getAppPreferences().getHighScore();
-
-        highScoreTextView.setText(String.valueOf(highScore));
+        highScoreTextView.setText(String.valueOf(App.getAppPreferences().getHighScore()));
 
         Button newGame = (Button) rootView.findViewById(R.id.button_new_game);
         newGame.setOnClickListener(new View.OnClickListener() {
@@ -53,7 +50,24 @@ public class GameFragment extends Fragment implements GameManager.GameManagerInt
                 gameManager.onNewGameClicked();
             }
         });
+
+        if (savedInstanceState != null) {
+            Game game = savedInstanceState.getParcelable("game");
+            if (game != null) {
+                game.setGameInterface(gameManager);
+                gameManager.setGame(game);
+                updateScore(String.valueOf(game.getScore()));
+                updateHighScore(String.valueOf(App.getAppPreferences().getHighScore()));
+            }
+        }
         return rootView;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        super.onSaveInstanceState(outState);
+
+        outState.putParcelable("game", gameManager.getGame());
     }
 
     @Override
