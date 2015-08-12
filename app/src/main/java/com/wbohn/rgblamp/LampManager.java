@@ -17,7 +17,6 @@ public class LampManager {
     private int mode;
 
     public LampManager() {
-        App.getEventBus().register(this);
     }
 
     public void setLampInterface(LampInterface lampInterface) {

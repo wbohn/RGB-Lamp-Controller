@@ -44,7 +44,6 @@ public class MainActivity extends ActionBarActivity implements
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         App.getEventBus().register(this);
 
         ActionBar actionBar = getSupportActionBar();
@@ -99,6 +98,8 @@ public class MainActivity extends ActionBarActivity implements
         super.onDestroy();
         App.getEventBus().unregister(this);
     }
+
+
 
     @Override
     public boolean onNavigationItemSelected(int position, long id) {

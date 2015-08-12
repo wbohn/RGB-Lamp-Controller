@@ -56,9 +56,6 @@ public class BluetoothConnection extends Fragment {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
 
-            if (action.equals(BluetoothDevice.ACTION_ACL_CONNECTED)) {
-                //Toast.makeText(getActivity(), "Connected", Toast.LENGTH_LONG).show();
-            }
             if (action.equals(BluetoothDevice.ACTION_ACL_DISCONNECT_REQUESTED)) {
                 stop();
             }
@@ -164,7 +161,6 @@ public class BluetoothConnection extends Fragment {
             @Override
             public void run() {
                 App.getEventBus().post(new ConnectionEvent());
-                //bluetoothConnectionInterface.connected();
             }
         });
         setState(STATE_CONNECTED);
@@ -174,10 +170,6 @@ public class BluetoothConnection extends Fragment {
         this.state = state;
         // Give the new state to the Handler so the UI Activity can update
         // mHandler.obtainMessage(Constants.MESSAGE_STATE_CHANGE, state, -1).sendToTarget();
-    }
-
-    public synchronized int getState() {
-        return state;
     }
 
     public void write(String msg) {

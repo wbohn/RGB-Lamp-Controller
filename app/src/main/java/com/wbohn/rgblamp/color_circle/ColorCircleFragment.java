@@ -32,7 +32,6 @@ public class ColorCircleFragment extends Fragment  implements LampManager.LampIn
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        App.getEventBus().register(this);
         lampManager = new LampManager();
         lampManager.setLampInterface(this);
     }
@@ -65,8 +64,15 @@ public class ColorCircleFragment extends Fragment  implements LampManager.LampIn
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onResume() {
+        super.onResume();
+        App.getEventBus().register(this);
+        App.getEventBus().register(lampManager);
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
         App.getEventBus().unregister(this);
         App.getEventBus().unregister(lampManager);
     }
